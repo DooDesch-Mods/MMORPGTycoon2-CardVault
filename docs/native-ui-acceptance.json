@@ -1,0 +1,20 @@
+{
+  "scope": "Native UI source acceptance before hosted release build",
+  "framework_version": "0.1.4",
+  "mod_version": "0.1.0",
+  "game_sha256": "bbab2dc68babcc644d0a1679548bf1e334b6c52aea669c3f61f6cb9d45c1aaf6",
+  "framework_sha256": "3489815736f2b8ef3b78b0c59d36c7da5007fec92b3d954cc014d3451dd65193",
+  "mod_sha256": "a55850c647ae5dee489cc79a0b9fedce7481af7ac1bb38ff286cd8f5e12483bc",
+  "checks": [
+    "central mod launcher",
+    "native community and exports tabs",
+    "search and selection",
+    "original PNG previews",
+    "readable local filenames"
+  ],
+  "images": {
+    "community.png": "d8d1f73137bd78150f952905c1bd2c4f064ecd52a5fd66deb41b63f2a400823a",
+    "exports.png": "68f2267cea0d1f35855dc52a1020bc1d9bbefc28e8fd494d9c31e5cc5b9e88c3"
+  },
+  "limits": "Hosted binaries have separate build identities. Native export/import effects retain the prior unchanged-path acceptance. No new card was published in this UI pass."
+}

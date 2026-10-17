@@ -15,7 +15,8 @@ from release_notes import section
 
 class ReleaseTests(unittest.TestCase):
     def archive(self, extra=None, identifier='doodesch.cardvault'):
-        temporary=tempfile.TemporaryDirectory()
+        (ROOT/'artifacts').mkdir(exist_ok=True)
+        temporary=tempfile.TemporaryDirectory(dir=ROOT/'artifacts')
         self.addCleanup(temporary.cleanup)
         path=Path(temporary.name)/'mod.zip'
         with zipfile.ZipFile(path,'w') as stream:
