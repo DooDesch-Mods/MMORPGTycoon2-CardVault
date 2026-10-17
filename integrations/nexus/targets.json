@@ -1,0 +1,13 @@
+{
+  "cardvault": {
+    "name": "MT2 Card Vault",
+    "domain": "mmorpgtycoon2",
+    "game_id": 4452,
+    "page_id": 26,
+    "mod_uid": "19121194401818",
+    "file_id": "0",
+    "file_variable": "NEXUS_CARDVAULT_FILE_ID",
+    "mod_variable": "NEXUS_CARDVAULT_MOD_ID",
+    "asset_pattern": "MT2CardVault-[0-9]*-windows-x64.zip"
+  }
+}

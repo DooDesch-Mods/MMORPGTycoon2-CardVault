@@ -1,0 +1,8 @@
+/build/
+/dist/
+/artifacts/
+__pycache__/
+*.pyc
+*.dll
+*.pdb
+*.obj

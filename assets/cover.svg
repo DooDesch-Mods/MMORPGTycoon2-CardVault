@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675"><rect width="1200" height="675" fill="#0b1c28"/><path d="M770 0 660 675" stroke="#1a4b5b" stroke-width="2"/><g transform="translate(810 125) scale(1.2)">
+  <title id="title">MT2 Card Vault</title>
+  <desc id="desc">Three teal character cards with an amber diamond on a dark blue background.</desc>
+  <rect width="256" height="256" rx="40" fill="#0b1c28"/>
+  <g stroke="#61ddd2" stroke-width="7" stroke-linejoin="round">
+    <path d="M40 77 112 54 156 190 84 213Z" fill="#123c4a"/>
+    <path d="m122 54 87 22-34 137-87-22Z" fill="#166078"/>
+    <path d="M83 44h90v163H83Z" fill="#174959"/>
+  </g>
+  <path d="m128 72 27 35-27 35-27-35Z" fill="#ffcb70"/>
+  <path d="M106 163h44m-35 17h26" stroke="#61ddd2" stroke-width="7" stroke-linecap="round"/>
+</g>
+<g fill="#f0f7fb" font-family="Segoe UI,Arial,sans-serif"><text x="72" y="155" font-size="26" fill="#61ddd2">MMORPG TYCOON 2</text><text x="68" y="270" font-size="82" font-weight="700">CARD VAULT</text><text x="72" y="343" font-size="32">Find your next character.</text><text x="72" y="441" font-size="24" fill="#bdd0da">Browse. Import. Share.</text><text x="72" y="594" font-size="21" fill="#bdd0da">In-game cards and a connected community.</text></g></svg>

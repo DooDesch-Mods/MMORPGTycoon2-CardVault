@@ -1,0 +1,11 @@
+{
+  "id": "doodesch.cardvault",
+  "name": "MT2 Card Vault",
+  "description": "Browse community character cards, import them into your library and share your own exports.",
+  "version": "0.1.0",
+  "api_version": "1.0.0",
+  "type": "native",
+  "entry": "MT2CardVault.dll",
+  "capabilities": ["ui", "input", "world.read"],
+  "multiplayer": "singleplayer"
+}

@@ -1,0 +1,142 @@
+name: Publish Nexus files
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Published GitHub release tag
+        required: true
+        type: string
+      target:
+        description: Nexus destination
+        type: choice
+        options: [all, cardvault]
+        default: all
+      publish:
+        description: Upload or complete Nexus changelog metadata after validation
+        type: boolean
+        default: false
+      announce:
+        description: Send the release announcement to Discord (once per product/version)
+        type: boolean
+        default: false
+      discord_message_id:
+        description: Existing Discord message ID to reconcile after an interrupted acknowledgement
+        type: string
+        required: false
+      update_announcement:
+        description: Update the identified existing Discord release post instead of sending
+        type: boolean
+        default: false
+  workflow_call:
+    inputs:
+      release_tag:
+        required: true
+        type: string
+      target:
+        type: string
+        default: cardvault
+      publish:
+        type: boolean
+        default: true
+      announce:
+        type: boolean
+        default: true
+permissions:
+  contents: read
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.targets.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - id: targets
+        env:
+          TARGET: ${{ inputs.target || 'all' }}
+        run: python tools/nexus_release.py matrix --target "$TARGET"
+  nexus:
+    needs: plan
+    permissions:
+      contents: write # Persist Discord delivery receipts on the existing GitHub release.
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    concurrency:
+      group: nexus-${{ matrix.product }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Validate release and Nexus destination
+        id: prepare
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NEXUSMODS_API_KEY: ${{ secrets.NEXUSMODS_API_KEY }}
+          NEXUS_FILE_ID: ${{ vars[matrix.file_variable] }}
+          NEXUS_MOD_ID: ${{ vars[matrix.mod_variable] }}
+          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag }}
+          TARGET: ${{ inputs.target || 'all' }}
+        run: |
+          optional=()
+          if [[ "$TARGET" == all ]]; then optional+=(--optional); fi
+          python tools/nexus_release.py prepare --product "${{ matrix.product }}" --tag "$RELEASE_TAG" --directory "artifacts/nexus/${{ matrix.product }}" "${optional[@]}"
+      - name: Upload file version
+        id: upload
+        if: steps.prepare.outputs.status == 'ready' && (github.event_name == 'release' || inputs.publish)
+        uses: Nexus-Mods/upload-action@98532f7670c27cbecc78fae03fa3e278147827e2 # v1.0.0-beta.11
+        with:
+          api_key: ${{ secrets.NEXUSMODS_API_KEY }}
+          file_id: ${{ steps.prepare.outputs.file_id }}
+          mod_id: ${{ steps.prepare.outputs.mod_uid }}
+          filename: ${{ steps.prepare.outputs.filename }}
+          version: ${{ steps.prepare.outputs.version }}
+          display_name: ${{ steps.prepare.outputs.display_name }}
+          description: ${{ steps.prepare.outputs.description }}
+          category: main
+          archive_existing_version: true
+          update_mod_version: true
+          primary_mod_manager_download: true
+          allow_mod_manager_download: true
+      - name: Confirm Nexus file version
+        if: steps.upload.outcome == 'success'
+        env:
+          NEXUSMODS_API_KEY: ${{ secrets.NEXUSMODS_API_KEY }}
+          VERSION_ID: ${{ steps.upload.outputs.version_id }}
+        run: python tools/nexus_release.py verify --directory "artifacts/nexus/${{ matrix.product }}" --version-id "$VERSION_ID"
+      - name: Complete Nexus changelog and announce on Discord
+        if: (steps.prepare.outputs.status == 'already-present' || steps.upload.outcome == 'success') && (github.event_name == 'release' || inputs.publish)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NEXUSMODS_API_KEY: ${{ secrets.NEXUSMODS_API_KEY }}
+          DISCORD_RELEASE_WEBHOOK: ${{ secrets.DISCORD_RELEASE_WEBHOOK }}
+          ANNOUNCE: ${{ github.event_name == 'release' || inputs.announce }}
+          DISCORD_MESSAGE_ID: ${{ inputs.discord_message_id }}
+          UPDATE_ANNOUNCEMENT: ${{ inputs.update_announcement }}
+        run: |
+          options=()
+          if [[ "$ANNOUNCE" == true ]]; then options+=(--announce); fi
+          if [[ -n "$DISCORD_MESSAGE_ID" ]]; then options+=(--message-id "$DISCORD_MESSAGE_ID"); fi
+          if [[ "$UPDATE_ANNOUNCEMENT" == true ]]; then options+=(--update-announcement); fi
+          python tools/release_delivery.py --directory "artifacts/nexus/${{ matrix.product }}" "${options[@]}"
+      - name: Retain release receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nexus-${{ matrix.product }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/nexus/**/*.json
+          if-no-files-found: warn

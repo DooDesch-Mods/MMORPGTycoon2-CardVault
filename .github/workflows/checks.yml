@@ -1,0 +1,39 @@
+name: Build and verify Card Vault
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+      - run: cmake --build build --config Release --parallel 2
+      - run: ctest --test-dir build -C Release --output-on-failure
+      - run: python tools/package.py
+      - run: python -m unittest discover -s tests -p "test_*.py"
+      - uses: actions/checkout@v4
+        with:
+          repository: DooDesch-Mods/MMORPGTycoon2-ModFramework
+          ref: 87361970c18ddec43f0926ba431d9597424b101c
+          path: framework
+      - name: Build the non-executing mod validator
+        run: |
+          cmake -S framework -B framework/build -G "Visual Studio 17 2022" -A x64 -DMT2FW_GAME=OFF
+          cmake --build framework/build --config Release --target mt2fw_check --parallel 2
+          python tools/package.py --checker framework/build/bin/Release/mt2fw.exe
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MT2CardVault-windows-x64-${{ github.sha }}
+          path: |
+            dist/*.zip
+            dist/SHA256SUMS.txt
+            dist/package.json
+          if-no-files-found: error

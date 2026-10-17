@@ -1,0 +1,54 @@
+name: Build and release Card Vault
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Validate tag, main branch and changelog
+        run: python tools/release.py preflight --tag "${{ github.ref_name }}"
+      - run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+      - run: cmake --build build --config Release --parallel 2
+      - run: ctest --test-dir build -C Release --output-on-failure
+      - run: python -m unittest discover -s tests -p "test_*.py"
+      - uses: actions/checkout@v4
+        with:
+          repository: DooDesch-Mods/MMORPGTycoon2-ModFramework
+          ref: 87361970c18ddec43f0926ba431d9597424b101c
+          path: framework
+      - name: Validate and package the player mod
+        run: |
+          cmake -S framework -B framework/build -G "Visual Studio 17 2022" -A x64 -DMT2FW_GAME=OFF
+          cmake --build framework/build --config Release --target mt2fw_check --parallel 2
+          python tools/package.py --checker framework/build/bin/Release/mt2fw.exe
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MT2CardVault-${{ github.ref_name }}
+          path: |
+            dist/*.zip
+            dist/SHA256SUMS.txt
+            dist/package.json
+          if-no-files-found: error
+      - name: Publish the verified GitHub download
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python tools/release.py publish --tag "${{ github.ref_name }}"
+  nexus:
+    needs: build
+    if: vars.NEXUS_CARDVAULT_FILE_ID != '' && vars.NEXUS_CARDVAULT_MOD_ID != ''
+    uses: ./.github/workflows/nexus-release.yml
+    with:
+      release_tag: ${{ github.ref_name }}
+      target: cardvault
+      publish: true
+      announce: true
+    secrets: inherit

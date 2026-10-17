@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">MT2 Card Vault</title>
+  <desc id="desc">Three teal character cards with an amber diamond on a dark blue background.</desc>
+  <rect width="256" height="256" rx="40" fill="#0b1c28"/>
+  <g stroke="#61ddd2" stroke-width="7" stroke-linejoin="round">
+    <path d="M40 77 112 54 156 190 84 213Z" fill="#123c4a"/>
+    <path d="m122 54 87 22-34 137-87-22Z" fill="#166078"/>
+    <path d="M83 44h90v163H83Z" fill="#174959"/>
+  </g>
+  <path d="m128 72 27 35-27 35-27-35Z" fill="#ffcb70"/>
+  <path d="M106 163h44m-35 17h26" stroke="#61ddd2" stroke-width="7" stroke-linecap="round"/>
+</svg>
